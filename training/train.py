@@ -10,7 +10,7 @@ import tensorflow.keras.backend as K
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-from kerasmodel_toprune import get_training_model
+from kerasmodel import get_training_model
 from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 from training.dataflow import COCODataPaths
@@ -243,4 +243,4 @@ if __name__ == '__main__':
                         epochs=max_iter,
                         callbacks=callbacks_list,
                         use_multiprocessing=False,
-                        initial_epoch=1000)
+                        initial_epoch=1)

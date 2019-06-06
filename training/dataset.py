@@ -6,7 +6,8 @@ from pycocotools.coco import maskUtils
 
 from tensorpack.dataflow.common import BatchData, MapData
 from tensorpack.dataflow.common import TestDataSpeed
-from tensorpack.dataflow.parallel import PrefetchDataZMQ, PrefetchData
+#from tensorpack.dataflow.parallel import PrefetchDataZMQ, PrefetchData,MultiThreadPrefetchData
+from tensorpack.dataflow.parallel import PrefetchDataZMQ
 
 from training.augmentors import ScaleAug, RotateAug, CropAug, FlipAug, \
     joints_to_point8, point8_to_joints, AugImgMetadata
@@ -188,15 +189,22 @@ def get_dataflow(coco_data_paths):
     :param coco_data_paths: paths to the coco files: annotation file and folder with images
     :return: dataflow object
     """
-    df = CocoDataFlow((368, 368), coco_data_paths)
+    batch_size = 2
+    curr_dir = os.path.dirname(__file__)
+    annot_path = os.path.join(curr_dir, '../dataset/annotations/person_keypoints_val2017.json')
+    img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/val2017/'))
+
+    df = CocoDataFlow((125, 125), COCODataPaths(annot_path, img_dir))
     df.prepare()
     df = MapData(df, read_img)
     df = MapData(df, gen_mask)
     df = MapData(df, augment)
     df = MapData(df, apply_mask)
     df = MapData(df, build_sample)
-    #df = PrefetchDataZMQ(df, nr_proc=4)
-    df = PrefetchData(df, 2, 1)
+    df = PrefetchDataZMQ(df,nr_proc=2)
+
+    #df=MultiProcessRunnerZMQ(df,1)
+    #df = PrefetchData(df, 2, 1)
 
     return df
 
@@ -224,7 +232,7 @@ if __name__ == '__main__':
     parameter of PrefetchDataZMQ. Ideally it should reflect the number of cores 
     in your hardware
     """
-    batch_size = 10
+    batch_size = 2
     curr_dir = os.path.dirname(__file__)
     annot_path = os.path.join(curr_dir, '../dataset/annotations/person_keypoints_val2017.json')
     img_dir = os.path.abspath(os.path.join(curr_dir, '../dataset/val2017/'))
@@ -235,11 +243,12 @@ if __name__ == '__main__':
     df = MapData(df, augment)
     df = MapData(df, apply_mask)
     df = MapData(df, build_sample)
-    df = PrefetchDataZMQ(df, nr_proc=4)
+    df = PrefetchDataZMQ(df, nr_proc=2)
+    #df=MultiProcessRunnerZMQ(df,1)
     df = BatchData(df, batch_size, use_list=False)
     df = MapData(df, lambda x: (
         [x[0], x[1], x[2]],
         [x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4], x[3], x[4]])
     )
 
-    TestDataSpeed(df, size=100).start()
+    TestDataSpeed(df, size=1000).start()

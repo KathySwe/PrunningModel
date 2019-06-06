@@ -15,15 +15,16 @@ from training.optimizers import MultiSGD
 from training.dataset import get_dataflow, batch_dataflow
 from training.dataflow import COCODataPaths
 
-#tf.enable_eager_execution()
-batch_size = 10
+tf.enable_eager_execution()
+
+batch_size = 2
 base_lr = 2e-5#4e-5 #
 momentum = 0.9
 weight_decay = 5e-4
 lr_policy = "step"
 gamma = 0.333
 stepsize = 68053  #136106  // after each stepsize iterations update learning rate: lr=lr*gamma
-max_iter = 10 # 600000
+max_iter = 100 # 600000
 
 #weights_best_file = "weights.best.h5"
 weights_best_file = "../model.h5"  #correct path
@@ -183,7 +184,7 @@ if __name__ == '__main__':
     # restore weights
 
     last_epoch = restore_weights(weights_best_file, model)
-    last_epoch=440000
+    last_epoch=10
     # prepare generators
 
     curr_dir = os.path.dirname(__file__)
@@ -243,5 +244,5 @@ if __name__ == '__main__':
                         steps_per_epoch=train_samples // batch_size,
                         epochs=max_iter,
                         callbacks=callbacks_list,
-                        use_multiprocessing=False,
-                        initial_epoch=last_epoch)
+                        use_multiprocessing=True,
+                        initial_epoch=0)
